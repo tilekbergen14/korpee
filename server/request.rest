@@ -1,0 +1,9 @@
+GET http://localhost:5000/posts
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiVGlsZWtiZXJnZW4iLCJpYXQiOjE2MzIwMzUwMzR9.0FEH3hES3yHQRQvhlxjpdFI-xd402ZimaOsr5BrnJWw
+###
+POST http://localhost:5000/login
+Content-Type: application/json
+
+{
+    "username": "Tilekbergen"
+}
