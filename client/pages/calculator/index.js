@@ -1,13 +1,16 @@
 import { useState, useEffect } from "react";
-import { Typography, Box, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper } from "@mui/material";
+import { Typography, Box, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, CircularProgress } from "@mui/material";
 import axios from 'axios';
-import Link from "next/link";
+import Link from "next/Link";
+import { Button } from "@mui/material";
+import { useRouter } from "next/router";
 
 export default function CalculatorPage(props) {
   const [items, setItems] = useState(props.items || []);
   const [services, setServices] = useState(props.services || []);
   const [materials, setMaterials] = useState(props.materials || []);
   const [cases, setCases] = useState(props.cases || []);
+  const [loading, setLoading] = useState(false);
   
   const [selectedItem, setSelectedItem] = useState(null);
   const [selectedService, setSelectedService] = useState(null);
@@ -15,30 +18,82 @@ export default function CalculatorPage(props) {
   const [selectedCase, setSelectedCase] = useState(null);
 
   const [total, setTotal] = useState(0);
-  
+  const router = useRouter();
+
   useEffect(() => {
-    if (selectedItem && selectedService && selectedMaterial && selectedCase) {
-      const totalPrice = 
-        selectedItem.price + 
-        selectedService.price + 
-        selectedMaterial.price + 
-        selectedCase.price;
-      setTotal(totalPrice);
-    } else {
-      setTotal(0);
-    }
+    const totalPrice = 
+      (selectedItem?.price || 0) + 
+      (selectedService?.price || 0) + 
+      (selectedMaterial?.price || 0) + 
+      (selectedCase?.price || 0);
+  
+    setTotal(totalPrice);
   }, [selectedItem, selectedService, selectedMaterial, selectedCase]);
 
   const handleSelect = (type, item) => {
-    if (type === "item") setSelectedItem(item);
-    if (type === "service") setSelectedService(item);
-    if (type === "material") setSelectedMaterial(item);
-    if (type === "case") setSelectedCase(item);
+    if (type === "item") setSelectedItem(prev => prev?.name === item.name ? null : item);
+    if (type === "service") setSelectedService(prev => prev?.name === item.name ? null : item);
+    if (type === "material") setSelectedMaterial(prev => prev?.name === item.name ? null : item);
+    if (type === "case") setSelectedCase(prev => prev?.name === item.name ? null : item);
+  };
+
+  const handleSubmit = async (e) => {
+    setLoading(true)
+    const user = JSON.parse(localStorage.getItem("user"));
+    
+    try {
+      const response = await axios.post(
+        `${process.env.server}/sale`,
+        { item: selectedItem._id, service: selectedService._id, material: selectedMaterial._id, case_id: selectedCase._id },
+        {
+          headers: {
+            authorization: "Bearer " + user.token,
+          },
+        }
+      );
+      
+     if(response) {
+      setLoading(false)
+      router.push("/sales");
+    }
+    } catch (error) {
+      console.error("Error adding/updating item:", error);
+      setLoading(false)
+    }
   };
 
   return (
-    <Box display="flex" flexDirection="column" height="100vh" sx={{ position: "relative", paddingBottom: 100 }}>
-      <Box display="flex" flex={1} sx={{ overflow: "auto", paddingTop: 10 }}>
+    <Box 
+      display="flex" 
+      flexDirection="column" 
+      sx={{ 
+        height: "100vh",  // Full screen height
+        position: "absolute",
+        top: 0,  
+        width: '100%',
+        overflow: "hidden", // Prevent scrolling
+      }}
+    >
+      {loading && <Box display="flex" flexDirection="column" alignItems="center" justifyContent="center" height="100vh" sx={{
+        position: "absolute",
+        top: 0,
+        left: 0,
+        width: "100%",
+        opacity: 0.5, 
+        backgroundColor: "black",
+        zIndex: 999, 
+      }}>
+        <CircularProgress />
+        <Typography variant="h6" mt={2}>Деректер жүктелуде...</Typography>
+      </Box>}
+      <Box 
+        display="flex" 
+        flex={1} 
+        sx={{ 
+          paddingTop: 10, 
+          overflow: "hidden" // Prevents inner scroll
+        }}
+      >
         {/* Items Table */}
         <TableSection 
           title="Маталар" 
@@ -80,18 +135,22 @@ export default function CalculatorPage(props) {
       <Box 
         sx={{ 
           position: "absolute", 
+          display: 'flex',
+          justifyContent: "space-between",
           bottom: 0, 
           left: 0, 
           width: "100%", 
           backgroundColor: "white", 
           padding: 2, 
           boxShadow: "0 -2px 10px rgba(0,0,0,0.1)", 
-          textAlign: "center"
         }}
       >
         <Typography variant="h5" gutterBottom>
           Жиынтық баға: {total}₸
         </Typography>
+        <Button variant="contained" color="success" onClick={handleSubmit}>
+          Сату
+        </Button>
       </Box>
     </Box>
   );

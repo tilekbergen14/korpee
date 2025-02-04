@@ -59,16 +59,16 @@ export default function Navbar({ profileImg }) {
           </Typography>
           <div className="flex">
             <ul className={`${styles.links} flex align-center`}>
-              <Link href="/courses">
-                <li className={`${styles.link} c-pointer`}>Item1</li>
+              <Link href="/calculator">
+                <li className={`${styles.link} c-pointer`}>Сату</li>
               </Link>
-              <Link href="/questions">
-                <li className={`${styles.link} c-pointer`}>Item2</li>
+              <Link href="/sales">
+                <li className={`${styles.link} c-pointer`}>Сату есебі</li>
               </Link>
 
-              <Link href="/posts">
+              {/* <Link href="/posts">
                 <li className={`${styles.link} c-pointer`}>Item3</li>
-              </Link>
+              </Link> */}
 
               <Link href={user ? "/me" : "/auth"}>
                 {user ? (
