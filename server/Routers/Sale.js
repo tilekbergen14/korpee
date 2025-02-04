@@ -7,14 +7,14 @@ router.post("/", authorization, async (req, res) => {
     const { id, item, service, material, case_id } = req.body;
 
     if (id) {
-      const updated = await Sale.findByIdAndUpdate(id, { item, service, material, case_id }, { new: true });
+      const updated = await Sale.findByIdAndUpdate(id, { item, service, material, case: case_id }, { new: true });
 
       if (!updated) return res.status(404).json("Sale not found!");
 
       return res.json(updated); 
     }
 
-    const newItem = await Sale.create({ item, service, material, case_id });
+    const newItem = await Sale.create({ item, service, material, case: case_id });
     return res.json(newItem); 
   } catch (err) {
     console.error(err);
@@ -24,7 +24,12 @@ router.post("/", authorization, async (req, res) => {
 
 router.get("/", async (req, res) => {
   try {
-    const items = await Sale.find({}).sort({ createdAt: -1 });
+    const items = await Sale.find({})
+      .sort({ createdAt: -1 })
+      .populate("item", "name price")     
+      .populate("service", "name price")   
+      .populate("material", "name price")  
+      .populate("case", "name price");  
     res.json(items);
   } catch (err) {
     res.status(409).send(err.message);
