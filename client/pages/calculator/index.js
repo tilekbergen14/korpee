@@ -1,9 +1,8 @@
 import { useState, useEffect } from "react";
-import { Typography, Box, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, CircularProgress } from "@mui/material";
-import axios from 'axios';
-import Link from "next/Link";
-import { Button } from "@mui/material";
+import { Typography, Box, MenuItem, Select, CircularProgress, Button, Card, CardContent } from "@mui/material";
+import axios from "axios";
 import { useRouter } from "next/router";
+import { TextField } from "@mui/material";
 
 export default function CalculatorPage(props) {
   const [items, setItems] = useState(props.items || []);
@@ -17,34 +16,59 @@ export default function CalculatorPage(props) {
   const [selectedMaterial, setSelectedMaterial] = useState(null);
   const [selectedCase, setSelectedCase] = useState(null);
 
+  const [lenght, setLenght] = useState(1);
+  const [weight, setWeight] = useState(1);
+  const [quantity, setQuantity] = useState(1);
+
   const [total, setTotal] = useState(0);
+  const [selectedOrders, setSelectedOrders] = useState([]); // Stores selected orders
+
   const router = useRouter();
 
   useEffect(() => {
     const totalPrice = 
-      (selectedItem?.price || 0) + 
-      (selectedService?.price || 0) + 
-      (selectedMaterial?.price || 0) + 
-      (selectedCase?.price || 0);
+      ((selectedItem?.price || 0) * lenght) + 
+      (selectedService?.price || 0 ) + 
+      ((selectedMaterial?.price || 0) * weight) + 
+      ((selectedCase?.price || 0) * quantity);
   
     setTotal(totalPrice);
-  }, [selectedItem, selectedService, selectedMaterial, selectedCase]);
+  }, [selectedItem, selectedService, selectedMaterial, selectedCase, lenght, weight, quantity]);
 
-  const handleSelect = (type, item) => {
-    if (type === "item") setSelectedItem(prev => prev?.name === item.name ? null : item);
-    if (type === "service") setSelectedService(prev => prev?.name === item.name ? null : item);
-    if (type === "material") setSelectedMaterial(prev => prev?.name === item.name ? null : item);
-    if (type === "case") setSelectedCase(prev => prev?.name === item.name ? null : item);
+  const addToOrders = () => {
+    if (!selectedItem && !selectedService && !selectedMaterial && !selectedCase) return;
+
+    const newOrder = {
+      item: selectedItem,
+      service: selectedService,
+      material: selectedMaterial,
+      case_id: selectedCase,
+      lenght,
+      weight,
+      quantity,
+      total,
+    };
+
+    setSelectedOrders([...selectedOrders, newOrder]);
+
+    // Reset selections
+    setSelectedItem(null);
+    setSelectedService(null);
+    setSelectedMaterial(null);
+    setSelectedCase(null);
+    setLenght(1);
+    setWeight(1);
+    setQuantity(1);
   };
 
-  const handleSubmit = async (e) => {
-    setLoading(true)
+  const sendOrdersToBackend = async () => {
+    setLoading(true);
     const user = JSON.parse(localStorage.getItem("user"));
-    
+
     try {
       const response = await axios.post(
-        `${process.env.server}/sale`,
-        { item: selectedItem._id, service: selectedService._id, material: selectedMaterial._id, case_id: selectedCase._id },
+        `${process.env.server}/sales`,
+        { orders: selectedOrders },
         {
           headers: {
             authorization: "Bearer " + user.token,
@@ -52,168 +76,115 @@ export default function CalculatorPage(props) {
         }
       );
       
-     if(response) {
-      setLoading(false)
-      router.push("/sales");
-    }
+      if (response) {
+        setLoading(false);
+        setSelectedOrders([]); // Clear orders after successful submission
+        router.push("/sales");
+      }
     } catch (error) {
-      console.error("Error adding/updating item:", error);
-      setLoading(false)
+      console.error("Error sending orders:", error);
+      setLoading(false);
     }
   };
 
   return (
-    <Box 
-      display="flex" 
-      flexDirection="column" 
-      sx={{ 
-        height: "100vh",  // Full screen height
-        position: "absolute",
-        top: 0,  
-        width: '100%',
-        overflow: "hidden", // Prevent scrolling
-      }}
-    >
-      {loading && <Box display="flex" flexDirection="column" alignItems="center" justifyContent="center" height="100vh" sx={{
-        position: "absolute",
-        top: 0,
-        left: 0,
-        width: "100%",
-        opacity: 0.5, 
-        backgroundColor: "black",
-        zIndex: 999, 
-      }}>
-        <CircularProgress />
-        <Typography variant="h6" mt={2}>Деректер жүктелуде...</Typography>
-      </Box>}
-      <Box 
-        display="flex" 
-        flex={1} 
-        sx={{ 
-          paddingTop: 10, 
-          overflow: "hidden" // Prevents inner scroll
-        }}
-      >
-        {/* Items Table */}
-        <TableSection 
-          title="Маталар" 
-          data={items} 
-          selected={selectedItem} 
-          onSelect={(item) => handleSelect("item", item)}
-          link="/items"
-        />
+    <Box display="flex" p={4}>
+      {loading && (
+        <Box display="flex" flexDirection="column" alignItems="center" justifyContent="center" height="100vh" 
+          sx={{ position: "absolute", top: 0, left: 0, width: "100%", opacity: 0.5, backgroundColor: "black", zIndex: 999 }}>
+          <CircularProgress />
+          <Typography variant="h6" mt={2}>Деректер жүктелуде...</Typography>
+        </Box>
+      )}
 
-        {/* Services Table */}
-        <TableSection 
-          title="Қызметтер" 
-          data={services} 
-          selected={selectedService} 
-          onSelect={(item) => handleSelect("service", item)}
-          link="/services"
-        />
+      {/* Dropdown Selectors */}
+      <div>
+        <div className="flex">
+          <Dropdown title="Маталар" data={items} selected={selectedItem} setSelected={setSelectedItem} />
+          <TextField 
+            type="number" 
+            label="Метр" 
+            variant="outlined" 
+            value={lenght}
+            sx={{ mt: 5, ml: 1, width: 100 }} 
+            onChange={(e) => setLenght(Math.max(1, parseInt(e.target.value, 10) || 1))}
+          />
+        </div>
+        <Dropdown title="Қызметтер" data={services} selected={selectedService} setSelected={setSelectedService} />
+        <div className="flex">
+          <Dropdown title="Шикізат" data={materials} selected={selectedMaterial} setSelected={setSelectedMaterial} />
+          <TextField 
+            type="number" 
+            label="Кг" 
+            variant="outlined" 
+            value={weight}
+            sx={{ mt: 5, ml: 1, width: 100 }} 
+            onChange={(e) => setWeight(Math.max(1, parseInt(e.target.value, 10) || 1))}
+          />
+        </div>
+        <div className="flex">
+          <Dropdown title="Қаптар" data={cases} selected={selectedCase} setSelected={setSelectedCase} />
+          <TextField 
+            type="number" 
+            label="Штук" 
+            variant="outlined" 
+            value={quantity}
+            sx={{ mt: 5, ml: 1, width: 100 }} 
+            onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value, 10) || 1))}
+          />
+        </div>
+        <Box mt={4} display="flex" flexDirection="column" alignItems="center">
+          <Typography variant="h5">Жиынтық баға: {total}₸</Typography>
+          <Button variant="contained" color="primary" onClick={addToOrders} sx={{ mt: 2, width: "100%" }}>
+            Себетке қосу
+          </Button>
+        </Box>
+      </div>
 
-        {/* Materials Table */}
-        <TableSection 
-          title="Шикізат" 
-          data={materials} 
-          selected={selectedMaterial} 
-          onSelect={(item) => handleSelect("material", item)}
-          link="/materials"
-        />
-
-        {/* Cases Table */}
-        <TableSection 
-          title="Қаптар" 
-          data={cases} 
-          selected={selectedCase} 
-          onSelect={(item) => handleSelect("case", item)}
-          link="/cases"
-        />
+      {/* Order Summary Card */}
+      <Card sx={{ mb: 2 }} width="100%">
+      <CardContent>
+      <Box ml={4} >
+        <Typography variant="h6" gutterBottom>Таңдалған тапсырыстар</Typography>
+        {selectedOrders.length === 0 ? (
+          <Typography color="textSecondary">Себет бос.</Typography>
+        ) : (
+          selectedOrders.map((order, index) => (
+              <div key={index}>
+                <Typography variant="body1"><strong>Маталар:</strong> {order.item?.name || "Жоқ"}</Typography>
+                <Typography variant="body1"><strong>Қызмет:</strong> {order.service?.name || "Жоқ"}</Typography>
+                <Typography variant="body1"><strong>Шикізат:</strong> {order.material?.name || "Жоқ"}</Typography>
+                <Typography variant="body1"><strong>Қаптар:</strong> {order.case_id?.name || "Жоқ"}</Typography>
+                <Typography variant="body1"><strong>Жалпы баға:</strong> {order.total}₸</Typography>
+              </div>
+          ))
+        )}
+        {selectedOrders.length > 0 && (
+          <Button variant="contained" color="success" onClick={sendOrdersToBackend} sx={{ mt: 2, width: "100%" }}>
+            Барлығын жіберу
+          </Button>
+        )}
       </Box>
-
-      {/* Total Price Display at the Bottom */}
-      <Box 
-        sx={{ 
-          position: "absolute", 
-          display: 'flex',
-          justifyContent: "space-between",
-          bottom: 0, 
-          left: 0, 
-          width: "100%", 
-          backgroundColor: "white", 
-          padding: 2, 
-          boxShadow: "0 -2px 10px rgba(0,0,0,0.1)", 
-        }}
-      >
-        <Typography variant="h5" gutterBottom>
-          Жиынтық баға: {total}₸
-        </Typography>
-        <Button variant="contained" color="success" onClick={handleSubmit}>
-          Сату
-        </Button>
-      </Box>
+      </CardContent>
+      </Card>
     </Box>
   );
 };
 
-// Reusable Table Component
-const TableSection = ({ title, data, selected, onSelect, link }) => (
-  <Box flex={3} bgcolor="white" py={4} display="flex" flexDirection="column" alignItems="center">
-    <Link href={link}>
-      <Typography variant="h4" gutterBottom sx={{ cursor: 'pointer' }}>
-        {title}
-      </Typography>
-    </Link>
-    <TableContainer component={Paper} sx={{ maxWidth: "90%", height: "70vh" }}>
-      <Table>
-        <TableHead>
-          <TableRow>
-            <TableCell><strong>Атауы</strong></TableCell>
-            <TableCell><strong>Бағасы (₸)</strong></TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {data.length > 0 ? (
-            data.map((item, index) => (
-              <TableRow 
-                key={index} 
-                onClick={() => onSelect(item)} 
-                sx={{ cursor: 'pointer', backgroundColor: selected?.name === item.name ? "#f0f0f0" : "white" }}
-              >
-                <TableCell>{item.name}</TableCell>
-                <TableCell>{item.price}₸</TableCell>
-              </TableRow>
-            ))
-          ) : (
-            <TableRow>
-              <TableCell colSpan={2} align="center">Элементтер жоқ</TableCell>
-            </TableRow>
-          )}
-        </TableBody>
-      </Table>
-    </TableContainer>
+// Dropdown Component
+const Dropdown = ({ title, data, selected, setSelected }) => (
+  <Box mb={3} width={300}>
+    <Typography variant="h6" gutterBottom>{title}</Typography>
+    <Select
+      fullWidth
+      value={selected || ""}
+      onChange={(e) => setSelected(e.target.value)}
+      displayEmpty
+    >
+      <MenuItem value="">Таңдаңыз</MenuItem>
+      {data.map((item) => (
+        <MenuItem key={item._id} value={item}>{item.name} - {item.price}₸</MenuItem>
+      ))}
+    </Select>
   </Box>
 );
-
-export const getStaticProps = async () => {
-  try {
-    const items = await axios.get(`${process.env.server}/item`);
-    const services = await axios.get(`${process.env.server}/service`);
-    const materials = await axios.get(`${process.env.server}/material`);
-    const cases = await axios.get(`${process.env.server}/case`);
-
-    return {
-      props: {
-        items: items.data || [],
-        services: services.data || [],
-        materials: materials.data || [],
-        cases: cases.data || [],
-      },
-      revalidate: 10, // Re-fetch data every 10 seconds
-    };
-  } catch (err) {
-    return {
-      notFound: true,
-    };
-  }
-};
