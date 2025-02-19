@@ -1,6 +1,6 @@
 const router = require("express").Router();
 const Material = require("../Models/Material");
-const authorization = require("../middlewares/Authenticaiton");
+const authorization = require("../Middlewares/Authenticaiton");
 
 router.post("/", authorization, async (req, res) => {
   try {

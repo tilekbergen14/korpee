@@ -1,7 +1,7 @@
 const router = require("express").Router();
 const Lesson = require("../Models/Lesson");
 const User = require("../Models/User");
-const authorization = require("../middlewares/Authenticaiton");
+const authorization = require("../Middlewares/Authenticaiton");
 const Serie = require("../Models/Series");
 const Block = require("../Models/Block");
 
