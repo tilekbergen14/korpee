@@ -7,7 +7,7 @@ import Post from "../components/Post";
 import axios from "axios";
 import Question from "../components/Question";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
-import Link from "next/Link";
+import Link from "next/link";
 import Footer from "../components/Footer";
 import adbox from "/public/images/pillow.jpg";
 

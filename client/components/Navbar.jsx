@@ -9,7 +9,7 @@ import MenuIcon from "@mui/icons-material/Menu";
 import styles from "../styles/Navbar.module.css";
 import Drawer from "./Drawer";
 import Avatar from "@mui/material/Avatar";
-import Link from "next/Link";
+import Link from "next/link";
 import useSWR from "swr";
 import axios from "axios";
 import { useRouter } from "next/router";

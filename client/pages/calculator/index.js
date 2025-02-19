@@ -1,5 +1,21 @@
 import { useState, useEffect } from "react";
-import { Typography, Box, MenuItem, Select, CircularProgress, Button, Card, CardContent } from "@mui/material";
+import {
+  Typography,
+  Box,
+  MenuItem,
+  Select,
+  CircularProgress,
+  Button,
+  Card,
+  CardContent,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+} from "@mui/material";
 import axios from "axios";
 import { useRouter } from "next/router";
 import { TextField } from "@mui/material";
@@ -21,9 +37,12 @@ export default function CalculatorPage(props) {
   const [quantity, setQuantity] = useState(1);
 
   const [total, setTotal] = useState(0);
+  const [allTotal, setAllTotal] = useState(0);
+  const [client, setClient] = useState("");
   const [selectedOrders, setSelectedOrders] = useState([]); // Stores selected orders
 
   const router = useRouter();
+  const today = new Date();
 
   useEffect(() => {
     const totalPrice = 
@@ -42,13 +61,13 @@ export default function CalculatorPage(props) {
       item: selectedItem,
       service: selectedService,
       material: selectedMaterial,
-      case_id: selectedCase,
+      case: selectedCase,
       lenght,
       weight,
       quantity,
       total,
     };
-
+    setAllTotal(allTotal+total)
     setSelectedOrders([...selectedOrders, newOrder]);
 
     // Reset selections
@@ -59,6 +78,11 @@ export default function CalculatorPage(props) {
     setLenght(1);
     setWeight(1);
     setQuantity(1);
+  };
+
+  const removeOrder = (index) => {
+    const updatedOrders = selectedOrders.filter((_, i) => i !== index);
+    setSelectedOrders(updatedOrders);
   };
 
   const sendOrdersToBackend = async () => {
@@ -90,82 +114,219 @@ export default function CalculatorPage(props) {
   return (
     <Box display="flex" p={4}>
       {loading && (
-        <Box display="flex" flexDirection="column" alignItems="center" justifyContent="center" height="100vh" 
-          sx={{ position: "absolute", top: 0, left: 0, width: "100%", opacity: 0.5, backgroundColor: "black", zIndex: 999 }}>
+        <Box
+          display="flex"
+          flexDirection="column"
+          alignItems="center"
+          justifyContent="center"
+          height="100vh"
+          sx={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            width: "100%",
+            opacity: 0.5,
+            backgroundColor: "black",
+            zIndex: 999,
+          }}
+        >
           <CircularProgress />
-          <Typography variant="h6" mt={2}>Деректер жүктелуде...</Typography>
+          <Typography variant="h6" mt={2}>
+            Деректер жүктелуде...
+          </Typography>
         </Box>
       )}
 
       {/* Dropdown Selectors */}
-      <div>
+      <div style={{ width: "40%" }}>
         <div className="flex">
-          <Dropdown title="Маталар" data={items} selected={selectedItem} setSelected={setSelectedItem} />
-          <TextField 
-            type="number" 
-            label="Метр" 
-            variant="outlined" 
+          <Dropdown
+            title="Маталар"
+            data={items}
+            selected={selectedItem}
+            setSelected={setSelectedItem}
+          />
+          <TextField
+            type="number"
+            label="Метр"
+            variant="outlined"
             value={lenght}
-            sx={{ mt: 5, ml: 1, width: 100 }} 
-            onChange={(e) => setLenght(Math.max(1, parseInt(e.target.value, 10) || 1))}
+            sx={{ mt: 5, ml: 1, width: 100 }}
+            onChange={(e) =>
+              setLenght(Math.max(1, parseInt(e.target.value, 10) || 1))
+            }
           />
         </div>
-        <Dropdown title="Қызметтер" data={services} selected={selectedService} setSelected={setSelectedService} />
+        <Dropdown
+          title="Қызметтер"
+          data={services}
+          selected={selectedService}
+          setSelected={setSelectedService}
+        />
         <div className="flex">
-          <Dropdown title="Шикізат" data={materials} selected={selectedMaterial} setSelected={setSelectedMaterial} />
-          <TextField 
-            type="number" 
-            label="Кг" 
-            variant="outlined" 
+          <Dropdown
+            title="Шикізат"
+            data={materials}
+            selected={selectedMaterial}
+            setSelected={setSelectedMaterial}
+          />
+          <TextField
+            type="number"
+            label="Кг"
+            variant="outlined"
             value={weight}
-            sx={{ mt: 5, ml: 1, width: 100 }} 
-            onChange={(e) => setWeight(Math.max(1, parseInt(e.target.value, 10) || 1))}
+            sx={{ mt: 5, ml: 1, width: 100 }}
+            onChange={(e) =>
+              setWeight(Math.max(1, parseInt(e.target.value, 10) || 1))
+            }
           />
         </div>
         <div className="flex">
-          <Dropdown title="Қаптар" data={cases} selected={selectedCase} setSelected={setSelectedCase} />
-          <TextField 
-            type="number" 
-            label="Штук" 
-            variant="outlined" 
+          <Dropdown
+            title="Қаптар"
+            data={cases}
+            selected={selectedCase}
+            setSelected={setSelectedCase}
+          />
+          <TextField
+            type="number"
+            label="Штук"
+            variant="outlined"
             value={quantity}
-            sx={{ mt: 5, ml: 1, width: 100 }} 
-            onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value, 10) || 1))}
+            sx={{ mt: 5, ml: 1, width: 100 }}
+            onChange={(e) =>
+              setQuantity(Math.max(1, parseInt(e.target.value, 10) || 1))
+            }
           />
         </div>
         <Box mt={4} display="flex" flexDirection="column" alignItems="center">
           <Typography variant="h5">Жиынтық баға: {total}₸</Typography>
-          <Button variant="contained" color="primary" onClick={addToOrders} sx={{ mt: 2, width: "100%" }}>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={addToOrders}
+            sx={{ mt: 2, width: "100%" }}
+          >
             Себетке қосу
           </Button>
         </Box>
+        <div className="flex">
+          <TextField
+            label="Клиент"
+            fullWidth
+            variant="outlined"
+            value={client}
+            sx={{ mt: 5 }}
+            onChange={(e) => setClient(e.target.value)}
+          />
+        </div>
       </div>
 
       {/* Order Summary Card */}
-      <Card sx={{ mb: 2 }} width="100%">
-      <CardContent>
-      <Box ml={4} >
-        <Typography variant="h6" gutterBottom>Таңдалған тапсырыстар</Typography>
-        {selectedOrders.length === 0 ? (
-          <Typography color="textSecondary">Себет бос.</Typography>
-        ) : (
-          selectedOrders.map((order, index) => (
-              <div key={index}>
-                <Typography variant="body1"><strong>Маталар:</strong> {order.item?.name || "Жоқ"}</Typography>
-                <Typography variant="body1"><strong>Қызмет:</strong> {order.service?.name || "Жоқ"}</Typography>
-                <Typography variant="body1"><strong>Шикізат:</strong> {order.material?.name || "Жоқ"}</Typography>
-                <Typography variant="body1"><strong>Қаптар:</strong> {order.case_id?.name || "Жоқ"}</Typography>
-                <Typography variant="body1"><strong>Жалпы баға:</strong> {order.total}₸</Typography>
-              </div>
-          ))
-        )}
-        {selectedOrders.length > 0 && (
-          <Button variant="contained" color="success" onClick={sendOrdersToBackend} sx={{ mt: 2, width: "100%" }}>
-            Барлығын жіберу
-          </Button>
-        )}
-      </Box>
-      </CardContent>
+      <Card sx={{ ml: 2, width: "60%" }}>
+        <CardContent>
+          <Box ml={4}>
+            <div style={{ display: "flex", justifyContent: "space-between" }}>
+              <Typography variant="h6" gutterBottom>
+                Клиент: {client}
+              </Typography>
+              <Typography variant="h6" gutterBottom>
+                Тапсырыс күні: {today.toISOString().split("T")[0]}
+              </Typography>
+            </div>
+            {selectedOrders.length === 0 ? (
+              <Typography color="textSecondary">Себет бос.</Typography>
+            ) : (
+              <TableContainer component={Paper}>
+                <Table>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>
+                        <strong>&#8470;</strong>
+                      </TableCell>
+                      <TableCell>
+                        <strong>Маталар</strong>
+                      </TableCell>
+                      <TableCell>
+                        <strong>Қызмет</strong>
+                      </TableCell>
+                      <TableCell>
+                        <strong>Шикізат</strong>
+                      </TableCell>
+                      <TableCell>
+                        <strong>Қаптар</strong>
+                      </TableCell>
+                      <TableCell>
+                        <strong>Жалпы баға</strong>
+                      </TableCell>
+                    </TableRow>
+                  </TableHead>
+                  {selectedOrders.map((order, index) => (
+                    <TableBody key={index}>
+                      <TableRow>
+                        <TableCell>{index + 1}</TableCell>
+                        <TableCell>
+                          {order.item?.name
+                            ? order.item?.name +
+                              "(" +
+                              order.item?.price +
+                              "₸ * " +
+                              order.lenght +
+                              "м)"
+                            : "-"}
+                        </TableCell>
+                        <TableCell>{order.service?.name || "-"}</TableCell>
+                        <TableCell>
+                          {order.material?.name
+                            ? order.material?.name +
+                              "(" +
+                              order.material?.price +
+                              "₸ * " +
+                              order.weight +
+                              "кг)"
+                            : "-"}
+                        </TableCell>
+                        <TableCell>
+                          {order.case?.name
+                            ? order.case?.name +
+                              "(" +
+                              order.case?.price +
+                              "₸ * " +
+                              order.quantity +
+                              "ш)"
+                            : "-"}
+                        </TableCell>
+                        <TableCell>{order.total}₸</TableCell>
+                        <TableCell>
+                          <Button
+                            variant="outlined"
+                            color="error"
+                            onClick={() => removeOrder(index)}
+                          >
+                            Жою
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    </TableBody>
+                  ))}
+                </Table>
+                <Typography variant="h6" sx={{ m: 2 }}>
+                  Жиынтық баға: {allTotal}₸
+                </Typography>
+              </TableContainer>
+            )}
+            {selectedOrders.length > 0 && (
+              <Button
+                variant="contained"
+                color="success"
+                onClick={sendOrdersToBackend}
+                sx={{ mt: 2, width: "100%" }}
+              >
+                Барлығын жіберу
+              </Button>
+            )}
+          </Box>
+        </CardContent>
       </Card>
     </Box>
   );
@@ -173,7 +334,7 @@ export default function CalculatorPage(props) {
 
 // Dropdown Component
 const Dropdown = ({ title, data, selected, setSelected }) => (
-  <Box mb={3} width={300}>
+  <Box mb={3} width={"100%"}>
     <Typography variant="h6" gutterBottom>{title}</Typography>
     <Select
       fullWidth
@@ -188,3 +349,26 @@ const Dropdown = ({ title, data, selected, setSelected }) => (
     </Select>
   </Box>
 );
+
+export const getStaticProps = async () => {
+  try {
+    const items = await axios.get(`${process.env.server}/item`);
+    const services = await axios.get(`${process.env.server}/service`);
+    const materials = await axios.get(`${process.env.server}/material`);
+    const cases = await axios.get(`${process.env.server}/case`);
+
+    return {
+      props: {
+        items: items.data || [],
+        services: services.data || [],
+        materials: materials.data || [],
+        cases: cases.data || [],
+      },
+      revalidate: 10,
+    };
+  } catch (err) {
+    return {
+      notFound: true,
+    };
+  }
+};

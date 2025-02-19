@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import styles from "../styles/PostComponent.module.css";
 import Avatar from "@mui/material/Avatar";
-import Link from "next/Link";
+import Link from "next/link";
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import axios from "axios";
