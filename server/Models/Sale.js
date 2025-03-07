@@ -2,26 +2,50 @@ const mongoose = require("mongoose");
 
 const SaleSchema = new mongoose.Schema(
   {
-    item: {
-      type: mongoose.ObjectId,
-      required: false,
-      ref: "Item",
+    name: {
+      type: String,
+      required: true,
     },
-    service: {
-      type: mongoose.ObjectId,
-      required: false,
-      ref: "Service",
+    total: {
+      type: Number,
+      required: true,
     },
-    material: {
-      type: mongoose.ObjectId,
-      required: false,
-      ref: "Material",
-    },
-    case: {
-        type: mongoose.ObjectId,
-        required: false,
-        ref: "Case",
-    },
+    sales: [
+      {
+        item: {
+          type: mongoose.ObjectId,
+          required: false,
+          ref: "Item",
+        },
+        service: {
+          type: mongoose.ObjectId,
+          required: false,
+          ref: "Service",
+        },
+        material: {
+          type: mongoose.ObjectId,
+          required: false,
+          ref: "Material",
+        },
+        case: {
+          type: mongoose.ObjectId,
+          required: false,
+          ref: "Case",
+        },
+        weight: {
+          type: Number,
+          required: false,
+        },
+        length: {
+          type: Number,
+          required: false,
+        },
+        quantity: {
+          type: Number,
+          required: false,
+        },
+      },
+    ],
   },
   { timestamps: true }
 );

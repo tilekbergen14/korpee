@@ -26,7 +26,7 @@ export default function CalculatorPage(props) {
   const [materials, setMaterials] = useState(props.materials || []);
   const [cases, setCases] = useState(props.cases || []);
   const [loading, setLoading] = useState(false);
-  
+
   const [selectedItem, setSelectedItem] = useState(null);
   const [selectedService, setSelectedService] = useState(null);
   const [selectedMaterial, setSelectedMaterial] = useState(null);
@@ -45,17 +45,26 @@ export default function CalculatorPage(props) {
   const today = new Date();
 
   useEffect(() => {
-    const totalPrice = 
-      ((selectedItem?.price || 0) * lenght) + 
-      (selectedService?.price || 0 ) + 
-      ((selectedMaterial?.price || 0) * weight) + 
-      ((selectedCase?.price || 0) * quantity);
-  
+    const totalPrice =
+      (selectedItem?.price || 0) * lenght +
+      (selectedService?.price || 0) +
+      (selectedMaterial?.price || 0) * weight +
+      (selectedCase?.price || 0) * quantity;
+
     setTotal(totalPrice);
-  }, [selectedItem, selectedService, selectedMaterial, selectedCase, lenght, weight, quantity]);
+  }, [
+    selectedItem,
+    selectedService,
+    selectedMaterial,
+    selectedCase,
+    lenght,
+    weight,
+    quantity,
+  ]);
 
   const addToOrders = () => {
-    if (!selectedItem && !selectedService && !selectedMaterial && !selectedCase) return;
+    if (!selectedItem && !selectedService && !selectedMaterial && !selectedCase)
+      return;
 
     const newOrder = {
       item: selectedItem,
@@ -67,7 +76,7 @@ export default function CalculatorPage(props) {
       quantity,
       total,
     };
-    setAllTotal(allTotal+total)
+    setAllTotal(allTotal + total);
     setSelectedOrders([...selectedOrders, newOrder]);
 
     // Reset selections
@@ -91,19 +100,19 @@ export default function CalculatorPage(props) {
 
     try {
       const response = await axios.post(
-        `${process.env.server}/sales`,
-        { orders: selectedOrders },
+        `${process.env.server}/sale`,
+        { orders: selectedOrders, client, total: allTotal },
         {
           headers: {
             authorization: "Bearer " + user.token,
           },
         }
       );
-      
+
       if (response) {
         setLoading(false);
-        setSelectedOrders([]); // Clear orders after successful submission
-        router.push("/sales");
+        // setSelectedOrders([]);
+        // router.push("/sales");
       }
     } catch (error) {
       console.error("Error sending orders:", error);
@@ -330,12 +339,14 @@ export default function CalculatorPage(props) {
       </Card>
     </Box>
   );
-};
+}
 
 // Dropdown Component
 const Dropdown = ({ title, data, selected, setSelected }) => (
   <Box mb={3} width={"100%"}>
-    <Typography variant="h6" gutterBottom>{title}</Typography>
+    <Typography variant="h6" gutterBottom>
+      {title}
+    </Typography>
     <Select
       fullWidth
       value={selected || ""}
@@ -344,7 +355,9 @@ const Dropdown = ({ title, data, selected, setSelected }) => (
     >
       <MenuItem value="">Таңдаңыз</MenuItem>
       {data.map((item) => (
-        <MenuItem key={item._id} value={item}>{item.name} - {item.price}₸</MenuItem>
+        <MenuItem key={item._id} value={item}>
+          {item.name} - {item.price}₸
+        </MenuItem>
       ))}
     </Select>
   </Box>
