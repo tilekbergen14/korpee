@@ -16,15 +16,12 @@ router.post("/", authorization, async (req, res) => {
       req.body.orders.length > 0
     ) {
       // Find or create a Sale document for the client
-      let sale = await Sale.findOne({ name: client });
 
-      if (!sale) {
-        sale = new Sale({
-          name: client,
-          total: total,
-          sales: [], // Initialize sales array if no sale document found
-        });
-      }
+      let sale = await Sale.create({
+        name: client,
+        total: total,
+        sales: [], // Initialize sales array if no sale document found
+      });
 
       // Loop through orders and add them to the sales array
       for (const order of req.body.orders) {
@@ -45,10 +42,10 @@ router.post("/", authorization, async (req, res) => {
           }
         }
 
-        if (order.length && order.item?._id) {
+        if (order.lenght && order.item?._id) {
           const item = await Item.findById(order.item?._id);
           if (item) {
-            item.total -= order.length;
+            item.total -= order.lenght;
             await item.save();
           }
         }
