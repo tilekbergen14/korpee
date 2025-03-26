@@ -7,15 +7,19 @@ router.post("/", authorization, async (req, res) => {
     const { name, price, spending, id } = req.body;
 
     if (id) {
-      const updatedItem = await Service.findByIdAndUpdate(id, { name, price, spending }, { new: true });
+      const updatedItem = await Service.findByIdAndUpdate(
+        id,
+        { name, price, spending },
+        { new: true }
+      );
 
       if (!updatedItem) return res.status(404).json("Item not found!");
 
-      return res.json(updatedItem); 
+      return res.json(updatedItem);
     }
 
     const newItem = await Service.create({ name, price, spending });
-    return res.json(newItem); 
+    return res.json(newItem);
   } catch (err) {
     console.error(err);
     res.status(500).json("Something went wrong!");

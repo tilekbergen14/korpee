@@ -4,18 +4,30 @@ const authorization = require("../Middlewares/Authenticaiton");
 
 router.post("/", authorization, async (req, res) => {
   try {
-    const { name, price, total, id } = req.body;
+    const { name, price, total, id, adding } = req.body;
 
     if (id) {
-      const updatedItem = await Item.findByIdAndUpdate(id, { name, price, total }, { new: true });
+      let newTotal = parseInt(total, 10);
+      let addingInt = parseInt(adding, 10);
+
+      if (!isNaN(newTotal) && !isNaN(addingInt)) {
+        if (addingInt) {
+          newTotal += addingInt;
+        }
+      }
+      const updatedItem = await Item.findByIdAndUpdate(
+        id,
+        { name, price, total: newTotal },
+        { new: true }
+      );
 
       if (!updatedItem) return res.status(404).json("Item not found!");
 
-      return res.json(updatedItem); 
+      return res.json(updatedItem);
     }
 
     const newItem = await Item.create({ name, price, total });
-    return res.json(newItem); 
+    return res.json(newItem);
   } catch (err) {
     console.error(err);
     res.status(500).json("Something went wrong!");
