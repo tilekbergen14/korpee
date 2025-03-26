@@ -1,6 +1,18 @@
-import { useState } from "react";
-import { Typography, Box, TextField, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper } from "@mui/material";
-import axios from 'axios';
+import { useState, useEffect } from "react";
+import {
+  Typography,
+  Box,
+  TextField,
+  Button,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+} from "@mui/material";
+import axios from "axios";
 
 export default function Index(props) {
   const [name, setName] = useState("");
@@ -8,11 +20,18 @@ export default function Index(props) {
   const [spending, setSpending] = useState("");
   const [items, setItems] = useState(props.items);
   const [selectedIndex, setSelectedIndex] = useState(null);
+  const [isAdmin, setIsAdmin] = useState(null);
 
+  useEffect(() => {
+    const user = JSON.parse(localStorage.getItem("user"));
+    if (user.role === "admin") {
+      setIsAdmin(true);
+    }
+  }, []);
   const handleSubmit = async (e) => {
     e.preventDefault();
     const user = JSON.parse(localStorage.getItem("user"));
-    
+
     try {
       const response = await axios.post(
         `${process.env.server}/service`,
@@ -23,9 +42,15 @@ export default function Index(props) {
           },
         }
       );
-  
+
       if (selectedIndex) {
-        setItems(items.map(item => (item._id === selectedIndex ? { ...item, name, price, spending } : item)));
+        setItems(
+          items.map((item) =>
+            item._id === selectedIndex
+              ? { ...item, name, price, spending }
+              : item
+          )
+        );
       } else {
         const newItem = response.data;
         setItems([...items, newItem]);
@@ -50,36 +75,64 @@ export default function Index(props) {
   return (
     <Box display="flex" height="100vh">
       {/* Table on the Left (60%) */}
-      <Box flex={6} bgcolor="white" display="flex" flexDirection="column" alignItems="center" p={4}>
-        <Box display="flex" justifyContent="space-between" alignItems="center" width="90%">
+      <Box
+        flex={6}
+        bgcolor="white"
+        display="flex"
+        flexDirection="column"
+        alignItems="center"
+        p={4}
+      >
+        <Box
+          display="flex"
+          justifyContent="space-between"
+          alignItems="center"
+          width="90%"
+        >
           <Typography variant="h4" gutterBottom>
-            Тауарлар тізімі
+            Қызметтер тізімі
           </Typography>
-          <Button variant="contained" color="success" onClick={() => { 
-            setName("");
-            setPrice("");
-            setSpending("");
-            setSelectedIndex(null);
-          }}>
-            Қосу
-          </Button>
+          {isAdmin && (
+            <Button
+              variant="contained"
+              color="success"
+              onClick={() => {
+                setName("");
+                setPrice("");
+                setSpending("");
+                setSelectedIndex(null);
+              }}
+            >
+              Қосу
+            </Button>
+          )}
         </Box>
         <TableContainer component={Paper} sx={{ maxWidth: "90%" }}>
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell><strong>Атауы</strong></TableCell>
-                <TableCell><strong>Бағасы (₸)</strong></TableCell>
-                <TableCell><strong>Барлығы (М)</strong></TableCell>
+                <TableCell>
+                  <strong>Атауы</strong>
+                </TableCell>
+                <TableCell>
+                  <strong>Бағасы (₸)</strong>
+                </TableCell>
+                <TableCell>
+                  <strong>Барлығы (М)</strong>
+                </TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {items.length > 0 ? (
                 items.map((item, index) => (
-                  <TableRow 
-                    key={index} 
+                  <TableRow
+                    key={index}
                     onClick={() => handleRowClick(item, index)}
-                    sx={{ cursor: "pointer", backgroundColor: selectedIndex === index ? "#e3f2fd" : "inherit" }}
+                    sx={{
+                      cursor: "pointer",
+                      backgroundColor:
+                        selectedIndex === index ? "#e3f2fd" : "inherit",
+                    }}
                   >
                     <TableCell>{item.name}</TableCell>
                     <TableCell>{item.price}₸</TableCell>
@@ -99,9 +152,18 @@ export default function Index(props) {
       </Box>
 
       {/* Form on the Right (40%) */}
-      <Box flex={4} bgcolor="#f5f5f5" p={4} display="flex" flexDirection="column" alignItems="center">
+      <Box
+        flex={4}
+        bgcolor="#f5f5f5"
+        p={4}
+        display="flex"
+        flexDirection="column"
+        alignItems="center"
+      >
         <Typography variant="h4" gutterBottom>
-        {selectedIndex === null ? "Мата қосу" : "Мата ақпараттарын өзгерту"}
+          {selectedIndex === null
+            ? "Қызмет қосу"
+            : "Қызмет ақпараттарын өзгерту"}
         </Typography>
         <form onSubmit={handleSubmit} style={{ width: "100%" }}>
           <TextField
@@ -112,6 +174,7 @@ export default function Index(props) {
             value={name}
             onChange={(e) => setName(e.target.value)}
             required
+            disabled={!isAdmin}
           />
           <TextField
             label="Бағасы"
@@ -122,8 +185,9 @@ export default function Index(props) {
             value={price}
             onChange={(e) => setPrice(e.target.value)}
             required
+            disabled={!isAdmin}
           />
-           <TextField
+          <TextField
             label="Барлығы"
             type="number"
             variant="outlined"
@@ -132,8 +196,16 @@ export default function Index(props) {
             value={spending}
             onChange={(e) => setSpending(e.target.value)}
             required
+            disabled={!isAdmin}
           />
-          <Button type="submit" variant="contained" color="success" fullWidth>
+
+          <Button
+            type="submit"
+            variant="contained"
+            color="success"
+            fullWidth
+            disabled={!isAdmin}
+          >
             {selectedIndex === null ? "Қосу" : "Өзгерту"}
           </Button>
         </form>
