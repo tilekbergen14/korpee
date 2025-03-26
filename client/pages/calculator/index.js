@@ -40,6 +40,7 @@ export default function CalculatorPage(props) {
   const [allTotal, setAllTotal] = useState(0);
   const [client, setClient] = useState("");
   const [selectedOrders, setSelectedOrders] = useState([]); // Stores selected orders
+  const [canSend, setCanSend] = useState(false);
 
   const router = useRouter();
   const today = new Date();
@@ -226,7 +227,10 @@ export default function CalculatorPage(props) {
             variant="outlined"
             value={client}
             sx={{ mt: 5 }}
-            onChange={(e) => setClient(e.target.value)}
+            onChange={(e) => {
+              e.target.value !== "" ? setCanSend(true) : setCanSend(false);
+              setClient(e.target.value);
+            }}
           />
         </div>
       </div>
@@ -330,6 +334,7 @@ export default function CalculatorPage(props) {
                 color="success"
                 onClick={sendOrdersToBackend}
                 sx={{ mt: 2, width: "100%" }}
+                disabled={!canSend}
               >
                 Барлығын жіберу
               </Button>
